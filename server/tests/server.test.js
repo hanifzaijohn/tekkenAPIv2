@@ -118,5 +118,43 @@ describe('GET /matches/:id', () => {
     .end(done);
   });
 
-
 });
+
+  describe('DELETE /matches/:id', () => {
+    it('should remove a match document by id', (done) => {
+      let hexId = matches[1]._id.toHexString();
+
+      request(app)
+        .delete(`/matches/${hexId}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.match._id).toBe(hexId);
+        })
+        .end((err, res) => {
+          if (err) {
+            return done(err);
+          }
+
+          Match.findById(hexId).then((match) => {
+            expect(match).toBeFalsy();
+            done();
+          }).catch((e) => done(e));
+        });
+    });
+
+    it('should return 404 if todo not found', (done) => {
+      let hexId = new ObjectID().toHexString();
+
+      request(app)
+        .delete(`/matches/${hexId}`)
+        .expect(404)
+        .end(done);
+    });
+
+    it('should return 404 if object id is invalid', (done) => {
+      request(app)
+        .delete('/matches/123abc')
+        .expect(404)
+        .end(done);
+    });
+  });

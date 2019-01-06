@@ -92,7 +92,7 @@ app.delete('/matches/:id', (req, res) => {
     if(!match){
       return res.status(404).send();
     }
-    res.send(match);
+    res.send({match});
   }).catch((e) => {
     res.status(400).send();
   });
