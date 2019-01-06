@@ -1,6 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+var {ObjectID} = require('mongodb');
+
 var {mongoose} = require('./db/mongoose');
 var {Match} = require('./models/match');
 var {Users} = require('./models/user');
@@ -14,7 +16,7 @@ const port = process.env.PORT || 3000;
 // to be able to recieve json
 app.use(bodyParser.json());
 
-// create match post request routing
+// app POST/ match
 app.post('/matches', (req, res) => {
 
   var match = new Match ({
@@ -34,12 +36,48 @@ app.post('/matches', (req, res) => {
   });
 });
 
-// app get we return all matches
+// app GET/ all matches saved in db
 app.get('/matches', (req,res) => {
   Match.find().then((matches) => {
   res.send({matches});
 }, (e) => {
   res.status(400).send(e);
+  });
+});
+
+//app GET/ num of Matches
+app.get('/matches/numofmatches', (req,res) => {
+  Match.countDocuments({}).then((count) => {
+    res.send(`Number of matches is ${count}`);
+  }, (e) => {
+    res.status(400).send(e);
+  });
+});
+
+//app GET/ winrate
+app.get('/matches/winrate', (req, res) => {
+  Match.countDocuments({win:true}).then((count) =>{
+    res.send(`Number of wins is ${count}`);
+  }, (e) => {
+    res.status(400).send(e);
+  });
+});
+// app GET/ get single MatchID
+// ex /matches/42523432
+app.get('/matches/:id', (req,res)=> {
+  var id = req.params.id;
+
+  if(!ObjectID.isValid(id)){
+    return res.status(404).send();
+  }
+
+  Match.findById(id).then((match) => {
+    if(!match){
+      return res.status(404).send();
+    }
+    res.send({match});
+  }).catch((e) => {
+    res.status(400).send();
   });
 });
 
