@@ -23,15 +23,19 @@ var Match = mongoose.model('Match', {
     required: true
   },
   fight_date:{
-    type: Number,
-    default: null
+    type: Date,
+    default: new Date().getTime()
   },
   side_selection:{
     type: String,
     default: 'Left'
+  },
+  notes:{
+    type:String,
+    default: "No Notes for this match"
   }
 
 });
 
-// export match model 
+// export match model
 module.exports = {Match};

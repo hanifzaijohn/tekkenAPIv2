@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const _ = require('lodash');
 
 var {ObjectID} = require('mongodb');
 
@@ -55,13 +56,20 @@ app.get('/matches/numofmatches', (req,res) => {
 });
 
 //app GET/ winrate
-app.get('/matches/winrate', (req, res) => {
-  Match.countDocuments({win:true}).then((count) =>{
-    res.send(`Number of wins is ${count}`);
-  }, (e) => {
-    res.status(400).send(e);
-  });
-});
+// app.get('/matches/winrate', (req, res) => {
+//   Match.countDocuments({}).then((numofmatches) => {
+//     res.send(`Number of matches is ${numofmatches}`);
+//   }, (e) => {
+//     res.status(400).send(e);
+//   });
+//
+//   Match.countDocuments({win:true}).then((count) =>{
+//     var winRate = count/totalMatches;
+//     res.send(`Number of wins is ${winRate}`);
+//   }, (e) => {
+//     res.status(400).send(e);
+//   });
+// });
 
 // app GET/ get single MatchID
 // ex /matches/42523432
@@ -88,6 +96,7 @@ app.delete('/matches/:id', (req, res) => {
   if(!ObjectID.isValid(id)){
     return res.status(404).send();
   }
+
   Match.findByIdAndDelete(id).then((match) => {
     if(!match){
       return res.status(404).send();
@@ -96,6 +105,31 @@ app.delete('/matches/:id', (req, res) => {
   }).catch((e) => {
     res.status(400).send();
   });
+});
+
+app.patch('/matches/:id', (req,res) => {
+  var id = req.params.id;
+
+  /* users can olnly send updates to pciked properties form body */
+  var body = _.pick(req.body, ['notes']);
+
+  if(!ObjectID.isValid(id)){
+    return res.status(404).send();
+  }
+
+  if(!(_.isString(body.notes))){
+    body.notes = null;
+  }
+
+  Match.findByIdAndUpdate(id, {$set: body}, {new: true}).then((match) => {
+    if(!match){
+      return res.status(404).send();
+    }
+    res.send({match});
+  }).catch((e) => {
+    res.status(400).send();
+  })
+
 });
 
 // listen on port for connections
