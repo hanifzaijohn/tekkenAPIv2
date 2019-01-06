@@ -1,16 +1,20 @@
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Match} = require('./../models/match');
 
+// test array of objects
 const matches = [{
+  _id: new ObjectID(),
   u_character : 'Asuka',
   e_character : 'Lili',
   won : 'true',
   stage : 'Kindergym',
   side_selection : 'Right'
 }, {
+  _id: new ObjectID(),
   u_character : 'Geese',
   e_character : 'Akuma',
   won : 'false'
@@ -23,9 +27,9 @@ beforeEach((done) => {
   }).then(() => done());
 });
 
-// sample post test match
+/* should create match with valid data */
 describe('POST /matches', () => {
-  it('should create new match', (done) => {
+  it('should create a new match', (done) => {
     var u_character = 'Jin';
     var e_character = 'Kazuya';
     var won = false;
@@ -48,13 +52,14 @@ describe('POST /matches', () => {
           return done(err);
         }
         Match.find({u_character, e_character, won, stage, side_selection}).then((matches) => {
-          expect(matches.length).toBe(2);
+          expect(matches.length).toBe(1);
           done();
         }).catch((e) => done(e));
       });
   });
 
-  it('should not create todo with invalid data', (done) => {
+  /* should not create match with empty object */
+  it('should not Match todo with invalid data', (done) => {
     request(app)
       .post('/matches')
       .send({})
@@ -71,7 +76,8 @@ describe('POST /matches', () => {
   });
 });
 
-describe('Get/matches', () => {
+/* checks get all matches */
+describe('GET /matches', () => {
   it('should get all matches', (done) => {
     request(app)
       .get('/matches')
@@ -80,5 +86,37 @@ describe('Get/matches', () => {
         expect(res.body.matches.length).toBe(2)
       })
       .end(done);
-      });
+    });
+});
+
+/* checks for specific match id matches the one in test array */
+describe('GET /matches/:id', () => {
+  it('should return match doc', (done) => {
+    request(app)
+    .get(`/matches/${matches[0]._id.toHexString()}`)
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.match.u_character).toBe(matches[0].u_character)
+    })
+    .end(done)
+  });
+
+  /* it should return 404 if match is not found */
+  it('should return 404 if match is not found', (done) => {
+    let hexId = new ObjectID().toHexString();
+    request(app)
+    .get(`/matches/${hexId}`)
+    .expect(404)
+    .end(done);
+  });
+
+  /* it should return 404 if objectID is invalid */
+  it('should return 404 for non objectID', (done) => {
+    request(app)
+    .get('/matches/ae3r23r324')
+    .expect(404)
+    .end(done);
+  });
+
+
 });
