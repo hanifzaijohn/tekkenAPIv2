@@ -82,6 +82,22 @@ app.get('/matches/:id', (req,res)=> {
   });
 });
 
+app.delete('/matches/:id', (req, res) => {
+  var id = req.params.id;
+
+  if(!ObjectID.isValid(id)){
+    return res.status(404).send();
+  }
+  Match.findByIdAndDelete(id).then((match) => {
+    if(!match){
+      return res.status(404).send();
+    }
+    res.send(match);
+  }).catch((e) => {
+    res.status(400).send();
+  });
+});
+
 // listen on port for connections
 app.listen(port, () => {
   console.log(`Started on ${port}`);
