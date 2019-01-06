@@ -16,6 +16,7 @@ app.use(bodyParser.json());
 
 // create match post request routing
 app.post('/matches', (req, res) => {
+
   var match = new Match ({
     u_character: req.body.u_character,
     e_character: req.body.e_character,
@@ -25,7 +26,7 @@ app.post('/matches', (req, res) => {
     side_selection:req.body.side_selection
   });
 
-// save recieved match or send error
+  // save recieved match or send error
   match.save().then((doc) => {
       res.send(doc);
   }, (e) => {
@@ -33,10 +34,18 @@ app.post('/matches', (req, res) => {
   });
 });
 
+// app get we return all matches
+app.get('/matches', (req,res) => {
+  Match.find().then((matches) => {
+  res.send({matches});
+}, (e) => {
+  res.status(400).send(e);
+  });
+});
 // listen on port for connections
 app.listen(port, () => {
   console.log(`Started on ${port}`);
 });
 
-// export app 
+// export app
 module.exports = {app};
