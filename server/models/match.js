@@ -15,7 +15,8 @@ var Match = mongoose.model('Match', {
     trim: true
   },
   stage:{
-    type: String
+    type: String,
+    default: 'Unavailable'
   },
   won:{
     type: Boolean,
