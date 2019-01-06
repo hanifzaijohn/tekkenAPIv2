@@ -4,12 +4,26 @@ const request = require('supertest');
 const {app} = require('./../server');
 const {Match} = require('./../models/match');
 
+const matches = [{
+  u_character : 'Asuka',
+  e_character : 'Lili',
+  won : 'true',
+  stage : 'Kindergym',
+  side_selection : 'Right'
+}, {
+  u_character : 'Geese',
+  e_character : 'Akuma',
+  won : 'false'
+}];
+
 beforeEach((done) => {
-  // whipe all matches before testing
-  Match.remove({}).then(() => done());
+  // whipe all matches before testing & then insert test array of objects
+  Match.remove({}).then(() => {
+    return Match.insertMany(matches);
+  }).then(() => done());
 });
 
-// sample test match
+// sample post test match
 describe('POST /matches', () => {
   it('should create new match', (done) => {
     var u_character = 'Jin';
@@ -33,8 +47,8 @@ describe('POST /matches', () => {
         if(err){
           return done(err);
         }
-        Match.find().then((matches) => {
-          expect(matches.length).toBe(1);
+        Match.find({u_character, e_character, won, stage, side_selection}).then((matches) => {
+          expect(matches.length).toBe(2);
           done();
         }).catch((e) => done(e));
       });
@@ -50,9 +64,21 @@ describe('POST /matches', () => {
           return done(err);
         }
         Match.find().then((matches) => {
-          expect(matches.length).toBe(0);
+          expect(matches.length).toBe(2);
           done();
         }).catch((e) => done(e));
       });
   });
+});
+
+describe('Get/matches', () => {
+  it('should get all matches', (done) => {
+    request(app)
+      .get('/matches')
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.matches.length).toBe(2)
+      })
+      .end(done);
+      });
 });
