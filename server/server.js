@@ -37,3 +37,6 @@ app.post('/matches', (req, res) => {
 app.listen(port, () => {
   console.log(`Started on ${port}`);
 });
+
+// export app 
+module.exports = {app};

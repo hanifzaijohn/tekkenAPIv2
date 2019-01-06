@@ -33,5 +33,5 @@ var Match = mongoose.model('Match', {
 
 });
 
-//
+// export match model 
 module.exports = {Match};

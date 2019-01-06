@@ -10,4 +10,5 @@ var User = mongoose.model('User', {
   }
 });
 
+//export user model 
 module.export = {User};
