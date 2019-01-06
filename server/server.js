@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 
 var {mongoose} = require('./db/mongoose');
 var {Match} = require('./models/match');
-var {User} = require('./models/user');
+var {Users} = require('./models/user');
 
 // create express application
 var app = express();
