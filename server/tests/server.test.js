@@ -158,3 +158,21 @@ describe('GET /matches/:id', () => {
         .end(done);
     });
   });
+
+describe('PATCH /matches:/id', () => {
+  it('should update the matches notes', (done) =>{
+    let hexId = matches[1]._id.toHexString();
+    var notes = 'Sample match notes for testing';
+
+    request(app)
+      .patch(`/matches/${hexId}`)
+      .send({
+        notes
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.match.notes).toBe(notes);
+      })
+      .end(done);
+  });
+});
