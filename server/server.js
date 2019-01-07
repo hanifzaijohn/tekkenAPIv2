@@ -1,3 +1,18 @@
+/* sets up enviornment and database connection depending on what we our doing.
+  if we are testing, we use test database, if we are developming we use our
+  regular database. If we are producing we use the heroku clouddb */
+var env = process.env.NODE_ENV || 'development';
+console.log('env******************', env);
+
+if(env === 'development'){
+  process.env.PORT = 3000;
+  process.env.MONGODB_URI = 'mongodb://localhost:27017/TekkenMatches';
+}else if (env === 'test'){
+  process.env.PORT = 3000;
+  process.env.MONGODB_URI = 'mongodb://localhost:27017/TekkenMatchesTEST';
+}
+
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const _ = require('lodash');
@@ -12,7 +27,7 @@ var {Users} = require('./models/user');
 var app = express();
 
 // use environment variable port or local host 3000
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 // to be able to recieve json
 app.use(bodyParser.json());
