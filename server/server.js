@@ -2,8 +2,6 @@
   if we are testing, we use test database, if we are developming we use our
   regular database. If we are producing we use the heroku clouddb */
 
-  // FOR FIRST COMMIT FROM LAPTOP
-  
 var env = process.env.NODE_ENV || 'development';
 console.log('env******************', env);
 
@@ -16,28 +14,43 @@ if(env === 'development'){
 }
 
 
+/* set up required modules */
+
+/* express framework */
 const express = require('express');
+
+/* to parse json user sends*/
 const bodyParser = require('body-parser');
+
+/* used primarily for pick() fields in json file */
 const _ = require('lodash');
 
+/* to validate mongodb IDs */
 var {ObjectID} = require('mongodb');
 
+/* use mongoose */
 var {mongoose} = require('./db/mongoose');
-var {Match} = require('./models/match');
-var {Users} = require('./models/user');
 
-// create express application
+/* use Match model from seperate file */
+var {Match} = require('./models/match');
+
+/* use Users model form serpearte file */
+var {User} = require('./models/user');
+
+/* create express application */
 var app = express();
 
-// use environment variable port or local host 3000
+/* use environment variable port */
 const port = process.env.PORT;
 
-// to be able to recieve json
+/* parse jason */
 app.use(bodyParser.json());
 
-// app POST/ match
+/* app POST/ match reequest
+  creates a new match */
 app.post('/matches', (req, res) => {
 
+  /* parse the request information into our model form */
   var match = new Match ({
     u_character: req.body.u_character,
     e_character: req.body.e_character,
@@ -47,7 +60,7 @@ app.post('/matches', (req, res) => {
     side_selection:req.body.side_selection
   });
 
-  // save recieved match or send error
+  /* save recieved match or send error */
   match.save().then((doc) => {
       res.send(doc);
   }, (e) => {
@@ -55,7 +68,8 @@ app.post('/matches', (req, res) => {
   });
 });
 
-// app GET/ all matches saved in db
+/* app GET/matches request
+  sends back all of users matches stored in db */
 app.get('/matches', (req,res) => {
   Match.find().then((matches) => {
   res.send({matches});
@@ -73,21 +87,6 @@ app.get('/matches/numofmatches', (req,res) => {
   });
 });
 
-//app GET/ winrate
-// app.get('/matches/winrate', (req, res) => {
-//   Match.countDocuments({}).then((numofmatches) => {
-//     res.send(`Number of matches is ${numofmatches}`);
-//   }, (e) => {
-//     res.status(400).send(e);
-//   });
-//
-//   Match.countDocuments({win:true}).then((count) =>{
-//     var winRate = count/totalMatches;
-//     res.send(`Number of wins is ${winRate}`);
-//   }, (e) => {
-//     res.status(400).send(e);
-//   });
-// });
 
 // app GET/ get single MatchID
 // ex /matches/42523432
@@ -128,13 +127,15 @@ app.delete('/matches/:id', (req, res) => {
 app.patch('/matches/:id', (req,res) => {
   var id = req.params.id;
 
-  /* users can olnly send updates to pciked properties form body */
+  /* users can olnly send updates to picked properties form body */
   var body = _.pick(req.body, ['notes']);
 
+  /* if not valid id send back 404 */
   if(!ObjectID.isValid(id)){
     return res.status(404).send();
   }
 
+  /* if the notes sent with request not a string then set it to NULL */
   if(!(_.isString(body.notes))){
     body.notes = null;
   }
@@ -150,10 +151,30 @@ app.patch('/matches/:id', (req,res) => {
 
 });
 
-// listen on port for connections
+app.post('/users', (req, res) => {
+  /* we pick only email and password of which user sends */
+  var body = _.pick(req.body, ['email', 'password']);
+
+  /* will save user information to db, will validate itself there */
+  var user = new User({
+    email : body.email,
+    password : body.password 
+  });
+
+  /* promise saving the user document to db
+    if it does not save then 400 message will be shown*/
+  user.save().then((user) => {
+    res.send(user);
+  }).catch((e) => {
+    res.status(400).send();
+  })
+
+});
+
+/* listen on port for connections */
 app.listen(port, () => {
   console.log(`Started on ${port}`);
 });
 
-// export app
+/* export app */
 module.exports = {app};
