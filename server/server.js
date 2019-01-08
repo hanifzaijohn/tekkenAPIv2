@@ -25,6 +25,8 @@ const bodyParser = require('body-parser');
 /* used primarily for pick() fields in json file */
 const _ = require('lodash');
 
+const fs = require('fs');
+
 /* to validate mongodb IDs */
 var {ObjectID} = require('mongodb');
 
@@ -202,6 +204,13 @@ app.post('/users/login', (req, res) => {
   });
 });
 
+app.delete('/users/me/token', authenticate, (req, res) => {
+  req.user.removeToken(req.token).then(() =>{
+    res.status(200).send();
+  }, () => {
+    res.status(400).send();
+  })
+});
 
 /* listen on port for connections */
 app.listen(port, () => {
