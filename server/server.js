@@ -37,6 +37,9 @@ var {Match} = require('./models/match');
 /* use Users model form serpearte file */
 var {User} = require('./models/user');
 
+/* use authenticate middleware */
+var {authenticate} = require('./middleware/authenticate');
+
 /* create express application */
 var app = express();
 
@@ -171,6 +174,11 @@ app.patch('/matches/:id', (req,res) => {
   }).catch((e) => {
     res.status(400).send();
   })
+});
+
+
+app.get('/users/me', authenticate, (req, res) => {
+  res.send(req.user);
 });
 
 /* listen on port for connections */

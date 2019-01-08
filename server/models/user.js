@@ -48,7 +48,7 @@ UserSchema.methods.toJSON = function() {
   return _.pick(userObject, ['_id', 'email']);
 };
 
-/* generateAuthToken function for user models */
+/* generateAuthToken function for user models (instance method) */
 UserSchema.methods.generateAuthToken = function () {
     let user = this;
     var access = 'auth';
@@ -58,6 +58,22 @@ UserSchema.methods.generateAuthToken = function () {
     return user.save().then(() => {
       return token;
     });
+};
+
+UserSchema.statics.findByToken = function (token) {
+  var User = this;
+  var decoded;
+
+  try {
+  decoded = jwt.verify(token, '1a2b3c');
+  } catch(e){
+    return Promise.reject();
+  }
+  return User.findOne({
+    '_id': decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth'
+  });
 };
 
 /* export schema as model back to user */
