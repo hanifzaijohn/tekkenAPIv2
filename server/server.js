@@ -88,8 +88,8 @@ app.get('/matches/numofmatches', (req,res) => {
 });
 
 
-// app GET/ get single MatchID
-// ex /matches/42523432
+/* app GET/:matchid
+  gets a match specific to id */
 app.get('/matches/:id', (req,res)=> {
   var id = req.params.id;
 
@@ -107,6 +107,7 @@ app.get('/matches/:id', (req,res)=> {
   });
 });
 
+
 app.delete('/matches/:id', (req, res) => {
   var id = req.params.id;
 
@@ -123,11 +124,12 @@ app.delete('/matches/:id', (req, res) => {
     res.status(400).send();
   });
 });
-
+/* app PATCH/:matchid
+*/
 app.patch('/matches/:id', (req,res) => {
   var id = req.params.id;
 
-  /* users can olnly send updates to picked properties form body */
+  /* users can only send updates to picked properties form body */
   var body = _.pick(req.body, ['notes']);
 
   /* if not valid id send back 404 */
@@ -151,24 +153,24 @@ app.patch('/matches/:id', (req,res) => {
 
 });
 
-app.post('/users', (req, res) => {
-  /* we pick only email and password of which user sends */
+
+/* app /POST/Users
+  where users will create there accounts for authorization*/
+  app.post('/users', (req, res) => {
   var body = _.pick(req.body, ['email', 'password']);
 
   /* will save user information to db, will validate itself there */
-  var user = new User({
-    email : body.email,
-    password : body.password 
-  });
+  var user = new User(body);
 
   /* promise saving the user document to db
     if it does not save then 400 message will be shown*/
-  user.save().then((user) => {
-    res.send(user);
+  user.save().then(() => {
+    return user.generateAuthToken();
+  }).then((token) => {
+    res.header('x-auth',token).send(user);
   }).catch((e) => {
     res.status(400).send();
   })
-
 });
 
 /* listen on port for connections */
