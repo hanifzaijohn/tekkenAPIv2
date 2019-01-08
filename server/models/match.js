@@ -33,8 +33,11 @@ var Match = mongoose.model('Match', {
   notes:{
     type:String,
     default: "No Notes for this match"
+  },
+  _creator: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
   }
-
 });
 
 // export match model

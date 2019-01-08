@@ -22,6 +22,7 @@ describe('POST /matches', () => {
 
     request(app)
       .post('/matches')
+      .set('x-auth', users[0].tokens[0].token)
       .send({u_character, e_character, won, stage, side_selection})
       .expect(200)
       .expect((res) => {
@@ -46,6 +47,7 @@ describe('POST /matches', () => {
   it('should not Match todo with invalid data', (done) => {
     request(app)
       .post('/matches')
+      .set('x-auth', users[0].tokens[0].token)
       .send({})
       .expect(400)
       .end((err, res) => {
@@ -65,9 +67,10 @@ describe('GET /matches', () => {
   it('should get all matches', (done) => {
     request(app)
       .get('/matches')
+      .set('x-auth', users[0].tokens[0].token)
       .expect(200)
       .expect((res) => {
-        expect(res.body.matches.length).toBe(2)
+        expect(res.body.matches.length).toBe(1)
       })
       .end(done);
     });
@@ -78,10 +81,19 @@ describe('GET /matches/:id', () => {
   it('should return match doc', (done) => {
     request(app)
     .get(`/matches/${matches[0]._id.toHexString()}`)
+    .set('x-auth', users[0].tokens[0].token)
     .expect(200)
     .expect((res) => {
       expect(res.body.match.u_character).toBe(matches[0].u_character)
     })
+    .end(done)
+  });
+
+  it('it should not return match doc for another user', (done) => {
+    request(app)
+    .get(`/matches/${matches[1]._id.toHexString()}`)
+    .set('x-auth', users[0].tokens[0].token)
+    .expect(404)
     .end(done)
   });
 
@@ -90,6 +102,7 @@ describe('GET /matches/:id', () => {
     let hexId = new ObjectID().toHexString();
     request(app)
     .get(`/matches/${hexId}`)
+    .set('x-auth', users[0].tokens[0].token)
     .expect(404)
     .end(done);
   });
@@ -98,6 +111,7 @@ describe('GET /matches/:id', () => {
   it('should return 404 for non objectID', (done) => {
     request(app)
     .get('/matches/ae3r23r324')
+    .set('x-auth', users[0].tokens[0].token)
     .expect(404)
     .end(done);
   });
@@ -110,6 +124,7 @@ describe('GET /matches/:id', () => {
 
       request(app)
         .delete(`/matches/${hexId}`)
+        .set('x-auth', users[1].tokens[0].token)
         .expect(200)
         .expect((res) => {
           expect(res.body.match._id).toBe(hexId);
@@ -126,11 +141,30 @@ describe('GET /matches/:id', () => {
         });
     });
 
+    it('should not remove a match document by id for another user', (done) => {
+      let hexId = matches[0]._id.toHexString();
+
+      request(app)
+        .delete(`/matches/${hexId}`)
+        .set('x-auth', users[1].tokens[0].token)
+        .expect(404)
+        .end((err, res) => {
+          if (err) {
+            return done(err);
+          }
+
+          Match.findById(hexId).then((match) => {
+            expect(match).toBeTruthy();
+            done();
+          }).catch((e) => done(e));
+        });
+    });
     it('should return 404 if todo not found', (done) => {
       let hexId = new ObjectID().toHexString();
 
       request(app)
         .delete(`/matches/${hexId}`)
+        .set('x-auth', users[1].tokens[0].token)
         .expect(404)
         .end(done);
     });
@@ -138,6 +172,7 @@ describe('GET /matches/:id', () => {
     it('should return 404 if object id is invalid', (done) => {
       request(app)
         .delete('/matches/123abc')
+        .set('x-auth', users[1].tokens[0].token)
         .expect(404)
         .end(done);
     });
@@ -148,18 +183,35 @@ describe('PATCH /matches:/id', () => {
     let hexId = matches[1]._id.toHexString();
     var notes = 'Sample match notes for testing';
 
+
     request(app)
       .patch(`/matches/${hexId}`)
+      .set('x-auth', users[0].tokens[0].token)
       .send({
         notes
       })
-      .expect(200)
-      .expect((res) => {
-        expect(res.body.match.notes).toBe(notes);
-      })
+      .expect(404)
       .end(done);
   });
 });
+
+
+  it('should not update the matches notes for another user', (done) =>{
+    let hexId = matches[1]._id.toHexString();
+    var notes = 'Sample match notes for testing';
+
+
+
+    request(app)
+      .patch(`/matches/${hexId}`)
+      .set('x-auth', users[0].tokens[0].token)
+      .send({
+        notes
+      })
+      .expect(404)
+      .end(done);
+  });
+
 
 describe('GET /users/me', () => {
   it('should return user if authenticated', (done)=>{
@@ -248,7 +300,7 @@ describe('POST /users/login ', () => {
           return done(err);
         }
         User.findById(users[1]._id).then((user) => {
-          expect(user.tokens[0]).toMatchObject({
+          expect(user.tokens[1]).toMatchObject({
             access: 'auth',
             token: res.headers['x-auth']
           });
@@ -273,7 +325,7 @@ describe('POST /users/login ', () => {
           return done(err);
         }
         User.findById(users[1]._id).then((user) => {
-          expect(user.tokens.length).toBe(0);
+          expect(user.tokens.length).toBe(1);
           done();
         }).catch((e) => done(e));
       });

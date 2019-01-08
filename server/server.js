@@ -54,7 +54,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 /* app POST/ match reequest
   creates a new match */
-app.post('/matches', (req, res) => {
+app.post('/matches', authenticate, (req, res) => {
 
   /* parse the request information into our model form */
   var match = new Match ({
@@ -63,7 +63,8 @@ app.post('/matches', (req, res) => {
     stage:req.body.stage,
     won:req.body.won,
     fight_date:req.body.fight_date,
-    side_selection:req.body.side_selection
+    side_selection:req.body.side_selection,
+    _creator:req.user._id
   });
 
   /* save recieved match or send error */
@@ -76,8 +77,10 @@ app.post('/matches', (req, res) => {
 
 /* app GET/matches request
   sends back all of users matches stored in db */
-app.get('/matches', (req,res) => {
-  Match.find().then((matches) => {
+app.get('/matches', authenticate, (req,res) => {
+  Match.find({
+    _creator:req.user._id
+  }).then((matches) => {
   res.send({matches});
 }, (e) => {
   res.status(400).send(e);
@@ -85,8 +88,9 @@ app.get('/matches', (req,res) => {
 });
 
 /*app GET/ num of Matches*/
-app.get('/matches/numofmatches', (req,res) => {
-  Match.countDocuments({}).then((count) => {
+app.get('/matches/numofmatches', authenticate, (req,res) => {
+  Match.countDocuments({_creator:req.user.id
+  }).then((count) => {
     res.send(`Number of matches is ${count}`);
   }, (e) => {
     res.status(400).send(e);
@@ -96,14 +100,17 @@ app.get('/matches/numofmatches', (req,res) => {
 
 /* app GET/:matchid
   gets a match specific to id */
-app.get('/matches/:id', (req,res)=> {
+app.get('/matches/:id', authenticate, (req,res) => {
   var id = req.params.id;
 
   if(!ObjectID.isValid(id)){
     return res.status(404).send();
   }
 
-  Match.findById(id).then((match) => {
+  Match.findOne({
+    _id: id,
+    _creator: req.user._id
+  }).then((match) => {
     if(!match){
       return res.status(404).send();
     }
@@ -114,14 +121,17 @@ app.get('/matches/:id', (req,res)=> {
 });
 
 
-app.delete('/matches/:id', (req, res) => {
+app.delete('/matches/:id', authenticate, (req, res) => {
   var id = req.params.id;
 
   if(!ObjectID.isValid(id)){
     return res.status(404).send();
   }
 
-  Match.findByIdAndDelete(id).then((match) => {
+  Match.findOneAndRemove({
+    _id: id,
+    _creator:req.user._id
+  }).then((match) => {
     if(!match){
       return res.status(404).send();
     }
@@ -132,7 +142,7 @@ app.delete('/matches/:id', (req, res) => {
 });
 /* app PATCH/:matchid
 */
-app.patch('/matches/:id', (req,res) => {
+app.patch('/matches/:id', authenticate, (req,res) => {
   var id = req.params.id;
 
   /* users can only send updates to picked properties form body */
@@ -148,7 +158,10 @@ app.patch('/matches/:id', (req,res) => {
     body.notes = null;
   }
 
-  Match.findByIdAndUpdate(id, {$set: body}, {new: true}).then((match) => {
+  Match.findOneAndUpdate({
+    _id: id,
+    _creator:req.user._id
+  }, {$set: body}, {new: true}).then((match) => {
     if(!match){
       return res.status(404).send();
     }
@@ -164,7 +177,7 @@ app.patch('/matches/:id', (req,res) => {
   where users will create there accounts for authorization*/
 app.post('/users', (req, res) => {
   var body = _.pick(req.body, ['email', 'password']);
-  console.log(body);
+  //console.log(body);
   /* will save user information to db, will validate itself there */
   var user = new User(body);
 

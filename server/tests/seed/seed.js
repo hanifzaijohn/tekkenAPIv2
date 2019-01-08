@@ -14,10 +14,15 @@ const users = [{
     access: 'auth',
     token: jwt.sign({_id: firstUserID, access: 'auth'}, '1a2b3c').toString()
   }]
+
 }, {
   _id: secondUserID,
   email: 'hihihi@gmail.com',
-  password: 'noTokens'
+  password: 'noTokens',
+  tokens: [{
+    access: 'auth',
+    token: jwt.sign({_id: secondUserID, access: 'auth'}, '1a2b3c').toString()
+  }]
 }];
 
 const matches = [{
@@ -26,12 +31,14 @@ const matches = [{
   e_character : 'Lili',
   won : 'true',
   stage : 'Kindergym',
-  side_selection : 'Right'
+  side_selection : 'Right',
+  _creator: firstUserID
 }, {
   _id: new ObjectID(),
   u_character : 'Geese',
   e_character : 'Akuma',
-  won : 'false'
+  won : 'false',
+  _creator: secondUserID
 }];
 
 const populateMatches = (done) => {
