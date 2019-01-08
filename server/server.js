@@ -1,17 +1,5 @@
-/* sets up enviornment and database connection depending on what we our doing.
-  if we are testing, we use test database, if we are developming we use our
-  regular database. If we are producing we use the heroku clouddb */
-
-var env = process.env.NODE_ENV || 'development';
-console.log('env******************', env);
-
-if(env === 'development'){
-  process.env.PORT = 3000;
-  process.env.MONGODB_URI = 'mongodb://localhost:27017/TekkenMatches';
-}else if (env === 'test'){
-  process.env.PORT = 3000;
-  process.env.MONGODB_URI = 'mongodb://127.0.0.1:27017/TekkenMatchesTEST';
-}
+/* get config files */
+require('./config/config');
 
 
 /* set up required modules */
@@ -25,7 +13,7 @@ const bodyParser = require('body-parser');
 /* used primarily for pick() fields in json file */
 const _ = require('lodash');
 
-const fs = require('fs');
+
 
 /* to validate mongodb IDs */
 var {ObjectID} = require('mongodb');
