@@ -10,6 +10,9 @@ const validator = require('validator');
 /* to use .pick() what we return in the model -> JSON file */
 const _ = require('lodash');
 
+/* to use bcrypt js */
+const bcrypt = require('bcryptjs');
+
 var UserSchema = new mongoose.Schema({
   email:{
     type: String,
@@ -75,6 +78,25 @@ UserSchema.statics.findByToken = function (token) {
     'tokens.access': 'auth'
   });
 };
+
+/* (middleware) before we save document, we want to hash password using bcrypt */
+UserSchema.pre('save', function (next){
+  var user = this;
+
+  /* we only hash password if it was modified (when they create account)*/
+  if(user.isModified('password')){
+    bcrypt.genSalt(10, (err, salt) =>{
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        user.password = hash;
+        next();
+      });
+    });
+
+
+  }else{
+    next();
+  }
+});
 
 /* export schema as model back to user */
 var User = mongoose.model('User', UserSchema);
