@@ -6,9 +6,10 @@ var authenticate = (req, res, next) => {
   /* find user by token given */
   User.findByToken(token).then((user)=> {
     if(!user){
-      // to run error case
+      /* to run error case */
       return Promise.reject();
     }
+    /* find user info which matches the token given */
     req.user = user;
     req.token = token;
     next();

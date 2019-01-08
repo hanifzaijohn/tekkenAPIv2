@@ -48,6 +48,7 @@ const port = process.env.PORT;
 
 /* parse jason */
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 /* app POST/ match reequest
   creates a new match */
@@ -81,7 +82,7 @@ app.get('/matches', (req,res) => {
   });
 });
 
-//app GET/ num of Matches
+/*app GET/ num of Matches*/
 app.get('/matches/numofmatches', (req,res) => {
   Match.countDocuments({}).then((count) => {
     res.send(`Number of matches is ${count}`);
@@ -159,9 +160,9 @@ app.patch('/matches/:id', (req,res) => {
 
 /* app /POST/Users
   where users will create there accounts for authorization*/
-  app.post('/users', (req, res) => {
+app.post('/users', (req, res) => {
   var body = _.pick(req.body, ['email', 'password']);
-
+  console.log(body);
   /* will save user information to db, will validate itself there */
   var user = new User(body);
 
@@ -176,10 +177,31 @@ app.patch('/matches/:id', (req,res) => {
   })
 });
 
-
+/* GET/users/me
+  calls authentication middleware to return information
+  about requesting user */
 app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
 });
+
+/* POST/users/login
+   checks users login information to login
+   scans our db for email & checks password
+   if succeeds we send auth token, if not
+   400 message*/
+
+app.post('/users/login', (req, res) => {
+  /* pick our arguments from req body */
+  var bodye = _.pick(req.body, ['email', 'password']);
+  User.findByCredentials(bodye.email, bodye.password).then((user) => {
+    user.generateAuthToken().then ((token) => {
+      res.header('x-auth', token).send(user);
+    });
+  }).catch((e) => {
+    res.status(400).send();
+  });
+});
+
 
 /* listen on port for connections */
 app.listen(port, () => {
