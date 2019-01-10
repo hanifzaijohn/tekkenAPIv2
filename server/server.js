@@ -13,7 +13,7 @@ const bodyParser = require('body-parser');
 /* used primarily for pick() fields in json file */
 const _ = require('lodash');
 
-
+const cookieParser = require('cookie-parser');
 
 /* to validate mongodb IDs */
 var {ObjectID} = require('mongodb');
@@ -39,6 +39,9 @@ const port = process.env.PORT;
 /* parse jason */
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+
+/*  use cookie-parser */
+app.use(cookieParser());
 
 /* app POST/ match reequest
   creates a new match */
@@ -172,8 +175,10 @@ app.post('/users', (req, res) => {
   /* promise saving the user document to db
     if it does not save then 400 message will be shown*/
   user.save().then(() => {
+
     return user.generateAuthToken();
   }).then((token) => {
+    res.cookie('usercookie', token);
     res.header('x-auth',token).send(user);
   }).catch((e) => {
     res.status(400).send();
@@ -184,6 +189,7 @@ app.post('/users', (req, res) => {
   calls authentication middleware to return information
   about requesting user */
 app.get('/users/me', authenticate, (req, res) => {
+  console.log('test');
   res.send(req.user);
 });
 
