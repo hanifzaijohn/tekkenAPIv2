@@ -178,8 +178,8 @@ app.post('/users', (req, res) => {
 
     return user.generateAuthToken();
   }).then((token) => {
-    res.cookie('usercookie', token);
-    res.header('x-auth',token).send(user);
+    res.cookie('usercookie', token, {secure:false});
+    //res.header('x-auth',token).send(user);
   }).catch((e) => {
     res.status(400).send();
   })
@@ -204,7 +204,8 @@ app.post('/users/login', (req, res) => {
   var bodye = _.pick(req.body, ['email', 'password']);
   User.findByCredentials(bodye.email, bodye.password).then((user) => {
     user.generateAuthToken().then ((token) => {
-      res.header('x-auth', token).send(user);
+      res.cookies('usercookie', token);
+      //res.header('x-auth', token).send(user);
     });
   }).catch((e) => {
     res.status(400).send();
@@ -213,6 +214,8 @@ app.post('/users/login', (req, res) => {
 
 app.delete('/users/me/token', authenticate, (req, res) => {
   req.user.removeToken(req.token).then(() =>{
+    res.clearCookie("usercookie");
+    console.log(req.cookie);
     res.status(200).send();
   }, () => {
     res.status(400).send();

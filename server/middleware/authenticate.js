@@ -1,7 +1,10 @@
 var {User} = require('./../models/user');
 
 var authenticate = (req, res, next) => {
-  var token = req.cookie('usercookie')
+  console.log('test')
+  //console.log(req.cookies);
+  var token = req.cookies.usercookie;
+  //console.log(token);
   //var token = req.header('x-auth');
 
   /* find user by token given */
